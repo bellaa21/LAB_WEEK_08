@@ -9,6 +9,7 @@ import androidx.work.*
 import android.widget.Toast
 import com.example.lab_week_08.worker.FirstWorker
 import com.example.lab_week_08.worker.SecondWorker
+import com.example.lab_week_08.worker.ThirdWorker
 
 class MainActivity : AppCompatActivity() {
     //Create an instance of a work manager
@@ -54,10 +55,17 @@ class MainActivity : AppCompatActivity() {
             .setInputData(getIdInputData(SecondWorker
                 .INPUT_DATA_ID, id)
             ).build()
+        //This request is created for the ThirdWorker class
+        val thirdRequest = OneTimeWorkRequest
+            .Builder(ThirdWorker::class.java)
+            .setConstraints(networkConstraints)
+            .setInputData(getIdInputData(ThirdWorker.INPUT_DATA_ID, id))
+            .build()
         //Sets up the process sequence from the work manager instance
         //Here it starts with FirstWorker, then SecondWorker
         workManager.beginWith(firstRequest)
             .then(secondRequest)
+            .then(thirdRequest)
             .enqueue()
         //All that's left to do is getting the output
         //Here, we receive the output and displaying the result as a toast message
@@ -79,6 +87,12 @@ class MainActivity : AppCompatActivity() {
             .observe(this) { info ->
                 if (info.state.isFinished) {
                     showResult("Second process is done")
+                }
+            }
+        workManager.getWorkInfoByIdLiveData(thirdRequest.id)
+            .observe(this) { info ->
+                if (info.state.isFinished) {
+                    showResult("Third process is done (SecondNotificationService executed)")
                 }
             }
     }
